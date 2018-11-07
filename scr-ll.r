@@ -17,7 +17,7 @@ library(spatstat)
 ## mask: Matrix containing x- and y-coordinates of mask point
 ##       locations. Needs to have attribute 'area', providing the area
 ##       of a single pixel.
-scr.nll <- function(pars, capt, traps, mask){
+scr.nll <- function(pars, capt, traps, mask, trace = FALSE){
     ## Unlinking parameters
     D <- exp(pars[1])
     g0 <- plogis(pars[2])
@@ -43,7 +43,7 @@ scr.nll <- function(pars, capt, traps, mask){
     ## point being detected by *at least one* trap.
     p.avoid <- apply(1 - mask.probs, 1, prod)
     p.det <- 1 - p.avoid
-    ##Calculating likelihood contribution due to each
+    ## Calculating likelihood contribution due to each
     ## detected animal's capture history.
     f.capt <- numeric(n)
     for (i in 1:n){
@@ -69,6 +69,9 @@ scr.nll <- function(pars, capt, traps, mask){
     ## comes from, but you need it.
     ll <- log.f.n + log.f.capt - n*log(sum(p.det))
     ## Returning negative log-likelihood.
+    if (trace){
+        cat("LL = ", ll, "\n", sep = "")
+    }
     -ll
 }
 
@@ -78,11 +81,39 @@ load("test-data.RData")
 ## Some start values: D = 0.1, g0 = 0.5, sigma = 50.
 par.start <- c(log(0.1), qlogis(0.5), log(50))
 
-fit <- optim(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
+## Fitting model.
+fit1 <- nlminb(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
+## Getting Hessian and variance-covariance matrix of linked parameters..
+hess <- optimHess(fit1$par, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
+## Using the delta method for variance-covariance matrix of unlinked parameters.
+vcov.link <- solve(hess)
+jacobian <- diag(3)
+diag(jacobian) <- c(exp(fit1$par[1]), dlogis(fit1$par[2]), exp(fit1$par[3]))
+vcov.unlink <- jacobian %*% vcov.link %*% t(jacobian)
+ses <- sqrt(diag(vcov.unlink))
+
+
 ## Unlinking estimates.
 ## D:
-exp(fit$par[1])
+D <- exp(fit1$par[1])
 ## g0:
-plogis(fit$par[2])
+g0 <- plogis(fit1$par[2])
 ## sigma:
-exp(fit$par[3])
+sigma <- exp(fit1$par[3])
+## All together:
+cbind(c(D, g0, sigma), ses)
+
+## Same model in ascr.
+library(ascr)
+
+capt.secr <- convert.capt.to.secr(list(bincapt = test.data$bin.capt), traps = test.data$traps)
+fit2 <- fit.ascr(capt = list(bincapt = test.data$bin.capt), traps = test.data$traps, mask = test.data$mask)
+summary(fit2)
+
+## Same model in secr.
+library(secr)
+capt.secr <- convert.capt.to.secr(list(bincapt = test.data$bin.capt), traps = test.data$traps)
+mask.secr <- convert.mask(test.data$mask)
+traps.secr <- convert.traps(test.data$traps)
+fit3 <- secr.fit(capthist = capt.secr, mask = mask.secr)
+predict(fit3)
