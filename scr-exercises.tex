@@ -34,17 +34,18 @@ assumptions:
   the detector.
 \end{itemize}
 
-Run the code and answer the following questions.
+Run the code in \texttt{scr-ll.r} and answer the following questions.
 
 \begin{enumerate}
 
+\section*{General questions}
+  
+\item Creat a plot of the detector locations. Their coodinates can be
+  found in \texttt{test.data\$traps}.
+  
 \item Inspect the capture histories in
   \texttt{test.data\$bin.capt}. Describe what the first two rows
   represent.
-
-\item Inspect the detector locations in \texttt{test.data\$traps}. This
-  gives the coordinates of the detector locations in metres. Describe
-  the detector configuration.
 
 \item The model has estimated animal density, $D$, and parameters of a
   halfnormal detection function, $g_0$ and $\sigma$. Create a plot of
@@ -52,11 +53,11 @@ Run the code and answer the following questions.
 
 \item Tricky question for STATS 730 graduates only:
   \begin{enumerate}
-  \item[(a)] Compute standard errors for the parameters on their link
-    scales, $\log(D)$, $\text{logit}(g_0)$, and $\log(\sigma)$. The
+  \item[(a)] Compute standard errors for the transformed parameters,
+    $\log(D)$, $\text{logit}(g_0)$, and $\log(\sigma)$. The
     \texttt{optim()} argument \texttt{hessian} will be useful.
   \item[(b)] Compute standard errors for the parameters themselves, $D$,
-    $g_0$, and $\sigma$. (HINT: $\Delta$)
+    $g_0$, and $\sigma$.
   \item[(c)] Compute confidence intervals for the three parameters.
   \end{enumerate}
   
@@ -99,6 +100,20 @@ Run the code and answer the following questions.
   \item[(b)] For STATS 730 graduates only: How often do your confidence
     intervals capture the true parameter values?
   \end{enumerate}
+
+  \section*{Questions for \texttt{secr} users}
+
+\item Fit the same model from \texttt{secr-ll.r}, but using the
+  \texttt{secr} package. Verify that you get the same parameter
+  estimates. For STATS 730 graduates, also verify that you get the
+  same standard errors. This will require some data reformatting.
+
+  \section*{Questions for \texttt{ascr} users}
+
+\item Fit the same model from \texttt{secr-ll.r}, but using the
+  \texttt{ascr} package. Verify that you get the same parameter
+  estimates. For STATS 730 graduates, also verify that you get the
+  same standard errors.
   
 \end{enumerate}
 
