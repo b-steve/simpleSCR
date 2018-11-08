@@ -77,7 +77,9 @@ load("test-data.RData")
 ## Some start values: D = 0.1, g0 = 0.5, sigma = 50.
 par.start <- c(log(0.1), qlogis(0.5), log(50))
 
+## Fitting the model.
 fit <- optim(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
+
 ## Unlinking estimates.
 ## D:
 exp(fit$par[1])
