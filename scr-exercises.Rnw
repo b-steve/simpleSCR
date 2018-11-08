@@ -8,6 +8,8 @@
 \usepackage{xparse}
 \DeclareDocumentCommand{\sct}{ O{} O{} m }{\shortcites{#3}\citet[#1][#2]{#3}}
 
+\newcommand{\answer}[1]{\textcolor{red}{#1}}
+
 \title{Simple SCR exercises}
 \date{}
 
@@ -38,19 +40,51 @@ Run the code in \texttt{scr-ll.r} and answer the following questions.
 
 \begin{enumerate}
 
+<<setup, echo = FALSE, cache = TRUE>>=
+source("scr-ll.r")
+@ 
+  
 \section*{General questions}
   
 \item Create a plot of the detector locations. Their coodinates can be
   found in \texttt{test.data\$traps}.
   
+<<plot-detectors, fig.width = 3, out.width = "3in", fig.height = 3, out.height = "3in", tidy = FALSE>>=
+par(mar = c(4, 4, 0, 0), oma = rep(1, 4))
+plot(test.data$traps, asp = 1, pch = as.character(1:9), 
+     xlab = "x-coordinate", ylab = "y-coordinate")
+@   
+
+\answer{We have a three-by-three grid of detectors with a spacing of
+  100 m between them.}
+
 \item Inspect the capture histories in
   \texttt{test.data\$bin.capt}. Describe what the first two rows
   represent.
+  
+<<head-capt>>=
+head(test.data$bin.capt, 2)
+@ 
+
+\answer{The first animal was detected by detectors 1 and 5
+  (bottom-left and middle). The second animal was detected by
+  detectors 1, 2, 5, 8, and 9 (bottom-left, middle-left, middle,
+  middle-right, and top-right).}
 
 \item The model has estimated animal density, $D$, and parameters of a
   halfnormal detection function, $g_0$ and $\sigma$. Create a plot of
   the detection function estimated by the model.
 
+<<plot-detfn, fig.width = 6, out.width = "6in", fig.height = 3.5, out.height = "3.5in">>=
+par(mar = c(4, 4, 0, 0), oma = rep(0.1, 4), xaxs = "i")
+xx <- seq(0, 650, length.out = 1000)
+g0 <- plogis(fit$par[2])
+sigma <- exp(fit$par[3])
+yy <- g0*exp(-xx^2/(2*sigma^2))
+plot(xx, yy, type = "l", xlab = "Distance", ylab = "Detection probability")
+abline(h = 0, lty = "dotted")
+@ 
+  
 \item Tricky question for STATS 730 graduates only:
   \begin{enumerate}
   \item[(a)] Compute standard errors for the transformed parameters,
