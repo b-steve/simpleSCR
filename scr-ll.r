@@ -75,9 +75,6 @@ scr.nll <- function(pars, capt, traps, mask){
     ## that we cannot observe an all-zero capture history.
     ll <- log.f.n + log.f.capt
     ## Returning negative log-likelihood.
-    if (trace){
-        cat("LL = ", ll, "\n", sep = "")
-    }
     -ll
 }
 
@@ -91,22 +88,22 @@ par.start <- c(log(0.1), qlogis(0.5), log(50))
 fit <- optim(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
 ## Fitting model.
 fit1 <- nlminb(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
-## Getting Hessian and variance-covariance matrix of linked parameters..
-hess <- optimHess(fit1$par, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
+## Getting Hessian and variance-covariance matrix of linked parameters.
+hess <- optimHess(fit$par, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
 ## Using the delta method for variance-covariance matrix of unlinked parameters.
 vcov.link <- solve(hess)
 jacobian <- diag(3)
-diag(jacobian) <- c(exp(fit1$par[1]), dlogis(fit1$par[2]), exp(fit1$par[3]))
+diag(jacobian) <- c(exp(fit$par[1]), dlogis(fit$par[2]), exp(fit$par[3]))
 vcov.unlink <- jacobian %*% vcov.link %*% t(jacobian)
 ses <- sqrt(diag(vcov.unlink))
 
 ## Unlinking estimates.
 ## D:
-D <- exp(fit1$par[1])
+D <- exp(fit$par[1])
 ## g0:
-g0 <- plogis(fit1$par[2])
+g0 <- plogis(fit$par[2])
 ## sigma:
-sigma <- exp(fit1$par[3])
+sigma <- exp(fit$par[3])
 ## All together:
 cbind(c(D, g0, sigma), ses)
 
