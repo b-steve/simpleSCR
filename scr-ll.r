@@ -8,7 +8,8 @@ library(spatstat)
 ##
 ## pars: A vector of parameters at which to compute the
 ##       log-likelihood. They should appear in the following order:
-##       (1) log(D), (2) logit(g0), (3) log(sigma).
+##       (1) log(D), (2) logit(g0), (3) log(sigma). Note that density,
+##       D, is animals per hectare.
 ##
 ## capt: Matrix of capture histories.
 ## 
@@ -17,6 +18,8 @@ library(spatstat)
 ## mask: Matrix containing x- and y-coordinates of mask point
 ##       locations. Needs to have attribute 'area', providing the area
 ##       of a single pixel.
+##
+## Note that trap and mask coordinates are given in metres.
 scr.nll <- function(pars, capt, traps, mask){
     ## Unlinking parameters
     D <- exp(pars[1])
