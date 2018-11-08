@@ -40,7 +40,7 @@ Run the code in \texttt{scr-ll.r} and answer the following questions.
 
 \begin{enumerate}
 
-<<setup, echo = FALSE, cache = TRUE>>=
+<<setup, echo = FALSE, message = FALSE, cache = TRUE>>=
 source("scr-ll.r")
 @ 
   
@@ -90,6 +90,14 @@ abline(h = 0, lty = "dotted")
   \item[(a)] Compute standard errors for the transformed parameters,
     $\log(D)$, $\text{logit}(g_0)$, and $\log(\sigma)$. The
     \texttt{optim()} argument \texttt{hessian} will be useful.
+
+<<link-ses, tidy = FALSE>>=
+hess <- optimHess(fit$par, scr.nll, capt = test.data$bin.capt, 
+                  traps = test.data$traps, mask = test.data$mask)
+vcov.link <- solve(hess)
+sqrt(diag(vcov.link))
+@ 
+    
   \item[(b)] Compute standard errors for the parameters themselves, $D$,
     $g_0$, and $\sigma$.
   \item[(c)] Compute confidence intervals for the three parameters.
