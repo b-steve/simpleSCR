@@ -1,0 +1,108 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage[natbibapa,nosectionbib]{apacite}
+\usepackage{enumitem}
+\usepackage[textwidth = 6in, top = 2cm, bottom = 2cm]{geometry}
+\usepackage{parskip}
+\usepackage{xparse}
+\DeclareDocumentCommand{\sct}{ O{} O{} m }{\shortcites{#3}\citet[#1][#2]{#3}}
+
+\title{Simple SCR exercises}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+The code in the file \texttt{scr-ll.r} creates a log-likelihood
+function, loads some example data, and fits the `binary proximity
+model' described by \sct{Efford2009}. The model makes the following
+assumptions:
+\begin{itemize}
+\item The number of animals' activity centres in the survey region is
+  a Poisson random variable, with expectation equal to animal density,
+  $D$, multiplied by the area of the survey region.
+\item The activity centre locations are independent, and are uniformly
+  distributed across the survey region.
+\item The probability that a detector detects an individual is given
+  by the halfnormal detection function,
+  \begin{equation*}
+    g(d) = g_0 \exp\left( \frac{-d^2}{2\sigma^2} \right),
+  \end{equation*}
+  where $d$ is the distance between the animal's activity centre and
+  the detector.
+\end{itemize}
+
+Run the code and answer the following questions.
+
+\begin{enumerate}
+
+\item Inspect the capture histories in
+  \texttt{test.data\$bin.capt}. Describe what the first two rows
+  represent.
+
+\item Inspect the detector locations in \texttt{test.data\$traps}. This
+  gives the coordinates of the detector locations in metres. Describe
+  the detector configuration.
+
+\item The model has estimated animal density, $D$, and parameters of a
+  halfnormal detection function, $g_0$ and $\sigma$. Create a plot of
+  the detection function estimated by the model.
+
+\item Tricky question for STATS 730 graduates only:
+  \begin{enumerate}
+  \item[(a)] Compute standard errors for the parameters on their link
+    scales, $\log(D)$, $\text{logit}(g_0)$, and $\log(\sigma)$. The
+    \texttt{optim()} argument \texttt{hessian} will be useful.
+  \item[(b)] Compute standard errors for the parameters themselves, $D$,
+    $g_0$, and $\sigma$. (HINT: $\Delta$)
+  \item[(c)] Compute confidence intervals for the three parameters.
+  \end{enumerate}
+  
+\item Write some R code that simulates capture histories from a
+  spatial capture-recapture model under the following conditions:
+  \begin{itemize}
+  \item The survey region is a square, with x-coordinate limits
+    $(-500, 900)$ and y-coordinate limits also $(-500, 900)$. Note
+    that these coordinates are given in metres.
+  \item Detectors are deployed on a three-by-three grid with a $100$ m
+    spacing between them, so that the columns are located at
+    x-coordinates $100$, $200$, and $300$, and the rows are located at
+    y-coordinates $100$, $200$, and $300$. Note that this is the
+    configuration of the detectors in \texttt{test.data\$traps}.
+  \item Animal density is $D = 0.75$ animals per hectare. Note that
+    $1$ hectare is $10\,000$ m$^2$.
+  \item Conditional on its activity centre location, an individual is
+    detected by a detector with probability given by a halfnormal
+    detection function with $g_0 = 0.9$ and $\sigma = 75$ m.
+  \end{itemize}
+
+  For bonus points, write your R code as a function, allowing the user
+  to set their own detector locations and parameter values.
+
+\item Fit a spatial capture-recapture model to your simulated
+  data. Note that you can use the detector locations in
+  \texttt{test.data\$traps} and the mask in
+  \texttt{test.data\$mask}. How close are your estimates to the true
+  parameter values?
+
+\item For STATS 730 graduates only: Compute confidence intervals for
+  the three parameters. Did they capture the true parameter values?
+
+\item Run a simulation study, repeating Questions 5--7 a total of 100
+  times. This involves simulating 100 sets of capture histories, and
+  generating estimates from each. Inspect your 100 sets of estimates.
+  \begin{enumerate}
+  \item[(a)] How close are the averages of your parameter estimates to
+    the true parameter values?
+  \item[(b)] For STATS 730 graduates only: How often do your confidence
+    intervals capture the true parameter values?
+  \end{enumerate}
+  
+\end{enumerate}
+
+\bibliographystyle{tcite}
+\bibliography{$HOME/mega/bib/refs}%$
+
+\end{document}
