@@ -40,7 +40,7 @@ Run the code in \texttt{scr-ll.r} and answer the following questions.
 
 \section*{General questions}
   
-\item Creat a plot of the detector locations. Their coodinates can be
+\item Create a plot of the detector locations. Their coodinates can be
   found in \texttt{test.data\$traps}.
   
 \item Inspect the capture histories in
