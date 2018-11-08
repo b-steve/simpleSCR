@@ -53,8 +53,11 @@ scr.nll <- function(pars, capt, traps, mask){
         for (j in 1:n.mask){
             log.f.capt.given.s[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE))
         }
-        ## Summing the probabilities over all mask points.
-        f.capt[i] <- sum(exp(log.f.capt.given.s))
+        ## Summing the probabilities over all mask points. The
+        ## denominator is the probability of detection by at least one
+        ## detector. It is required because it is impossible to
+        ## observe an all-zero capture history.
+        f.capt[i] <- sum(exp(log.f.capt.given.s))/sum(p.det)
     }
     ## Log-likelihood contribution from all capture histories
     ## calculated by the log of the sum of the individual likelihood
@@ -65,8 +68,9 @@ scr.nll <- function(pars, capt, traps, mask){
     ## Log-likelihood contribution from the number of animals
     ## detected.
     log.f.n <- dpois(n, D*esa, log = TRUE)
-    ## Overall log-likelihood.
-    ll <- log.f.n + log.f.capt - n*log(sum(p.det))
+    ## Overall log-likelihood. The last part accounts for the fact
+    ## that we cannot observe an all-zero capture history.
+    ll <- log.f.n + log.f.capt
     ## Returning negative log-likelihood.
     -ll
 }
