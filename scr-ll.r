@@ -65,8 +65,7 @@ scr.nll <- function(pars, capt, traps, mask){
     ## Log-likelihood contribution from the number of animals
     ## detected.
     log.f.n <- dpois(n, D*esa, log = TRUE)
-    ## Overall log-likelihood. I can never remember where the last bit
-    ## comes from, but you need it.
+    ## Overall log-likelihood.
     ll <- log.f.n + log.f.capt - n*log(sum(p.det))
     ## Returning negative log-likelihood.
     -ll
