@@ -101,19 +101,20 @@ Run the code in \texttt{scr-ll.r} and answer the following questions.
     intervals capture the true parameter values?
   \end{enumerate}
 
-  \section*{Questions for \texttt{secr} users}
+   \section*{Questions for \texttt{ascr} users}
+  
+\item Fit the same model from \texttt{secr-ll.r}, but using the
+  \texttt{ascr} package. Verify that you get the same parameter
+  estimates. For STATS 730 graduates, also verify that you get similar
+  standard errors and confidence intervals.
+  
+ \section*{Questions for \texttt{secr} users}
 
 \item Fit the same model from \texttt{secr-ll.r}, but using the
   \texttt{secr} package. Verify that you get the same parameter
-  estimates. For STATS 730 graduates, also verify that you get the
-  same standard errors. This will require some data reformatting.
-
-  \section*{Questions for \texttt{ascr} users}
-
-\item Fit the same model from \texttt{secr-ll.r}, but using the
-  \texttt{ascr} package. Verify that you get the same parameter
-  estimates. For STATS 730 graduates, also verify that you get the
-  same standard errors.
+  estimates. For STATS 730 graduates, also verify that you get similar
+  standard errors and confidence intervals. This will require some
+  data reformatting.  
   
 \end{enumerate}
 
