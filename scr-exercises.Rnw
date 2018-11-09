@@ -289,6 +289,19 @@ for (i in 1:n.sims){
     intervals capture the true parameter values?
   \end{enumerate}
 
+<<simstudy-res, echo = -1>>=
+load("sim-res.RData")
+## Averages across all simulations. Note that the model fit on the first 
+## iteration did not converge properly and gave me a silly answer, so I
+## discarded it.
+apply(par.ests[-1, ], 2, mean)
+@ 
+
+\answer{The averages for all three parameters are close to the true
+  parameter values. Our estimators appear more-or-less unbiased. We'd
+  probably get a better indication with a larger number of
+  iterations.}
+
   \section*{Questions for \texttt{ascr} users}
   
 \item Fit the same model from \texttt{secr-ll.r}, but using the
