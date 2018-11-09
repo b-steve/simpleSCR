@@ -307,16 +307,21 @@ summary(fit.ascr)
 cbind(c(exp(fit$par[1]), plogis(fit$par[2]), exp(fit$par[3])),
       ses.unlink)
 ## Looking at the confidence intervals.
-confint(fit.ascr)
+confint(fit.ascr, linked = TRUE)
 ## Comparison with our confidence intervals.
 rbind(exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1]),
       plogis(fit$par[2] + c(-1, 1)*qnorm(0.975)*ses.link[2]),
       exp(fit$par[3] + c(-1, 1)*qnorm(0.975)*ses.link[3]))
 @ 
 
-\answer{Our estimates are the same, but \texttt{ascr} appears to
+\answer{Our estimates, standard errors, and confidence intervals are
+  all very similar. Note that, by default, \texttt{ascr} appears to
   construct the confidence intervals directly on the untransformed
-  parameters, which isn't entirely sensible! (Oops, better fix this.)}
+  parameters, which isn't entirely sensible! You need to add the
+  argument \texttt{linked = TRUE} to calculate confidence intervals
+  for the transformed parameters, and then convert them to the
+  untransformed parameters. I should probably change the default
+  behaviour.}
   
   \section*{Questions for \texttt{secr} users}
 
@@ -346,8 +351,8 @@ rbind(exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1]),
       exp(fit$par[3] + c(-1, 1)*qnorm(0.975)*ses.link[3]))
 @ 
 
-\answer{The standard errors are a little different, but the estimates
-  and confidence intervals are very similar.}
+\answer{The standard errors are a little different for some reason,
+  but the estimates and confidence intervals are very similar.}
 
 \end{enumerate}
 
