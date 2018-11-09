@@ -40,6 +40,10 @@ Run the code in \texttt{scr-ll.r} and answer the following questions.
 
 \begin{enumerate}
 
+<<package-load, message = FALSE, echo = FALSE>>=
+library(spatstat)
+@ 
+  
 <<setup, echo = FALSE, message = FALSE, cache = TRUE>>=
 source("scr-ll.r")
 @ 
@@ -89,7 +93,8 @@ abline(h = 0, lty = "dotted")
   \begin{enumerate}
   \item[(a)] Compute standard errors for the transformed parameters,
     $\log(D)$, $\text{logit}(g_0)$, and $\log(\sigma)$. The
-    \texttt{optim()} argument \texttt{hessian} will be useful.
+    \texttt{optim()} argument \texttt{hessian} or the
+    \texttt{optimHess()} function will be useful.
 
 <<link-ses, tidy = FALSE>>=
 hess <- optimHess(fit$par, scr.nll, capt = test.data$bin.capt, 
@@ -100,8 +105,50 @@ sqrt(diag(vcov.link))
     
   \item[(b)] Compute standard errors for the parameters themselves, $D$,
     $g_0$, and $\sigma$.
+    
+<<unlink-ses, tidy = FALSE>>=
+jacobian <- diag(3)
+diag(jacobian) <- c(exp(fit$par[1]), dlogis(fit$par[2]), exp(fit$par[3]))
+vcov.unlink <- jacobian %*% vcov.link %*% t(jacobian)
+sqrt(diag(vcov.unlink))
+@ 
+    
   \item[(c)] Compute confidence intervals for the three parameters.
-  \end{enumerate}
+ 
+    \answer{Calculating a confidence interval for the transformed
+      parameters and then back-transforming.}
+<<unlink-ci1>>=
+ses.link <- sqrt(diag(vcov.link))
+## For D:
+exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1])
+## For g0:
+plogis(fit$par[2] + c(-1, 1)*qnorm(0.975)*ses.link[2])
+## For sigma:
+exp(fit$par[3] + c(-1, 1)*qnorm(0.975)*ses.link[3])
+@ 
+
+\answer{Constructing the confidence intervals on the untransformed
+  parameters directly is possible, but not recommended. We would
+  expect the transformed versions to be better approximated by a
+  normal distribution. We also get confidence intervals going
+  out-of-bounds (negative $D < 0$ and $g_0 > 1$) if we use this
+  approach.}
+  
+<<unlink-ci2>>=
+ses.unlink <- sqrt(diag(vcov.unlink))
+## For D:
+exp(fit$par[1]) + c(-1, 1)*qnorm(0.975)*ses.unlink[1]
+## For g0:
+plogis(fit$par[2]) + c(-1, 1)*qnorm(0.975)*ses.unlink[2]
+## For sigma:
+exp(fit$par[3]) + c(-1, 1)*qnorm(0.975)*ses.unlink[3]
+@ 
+
+\answer{Bonus points if you computed profile-likelihood confidence
+  intervals---that's probably the best option, but quite a lot more
+  work!}
+
+\end{enumerate}
   
 \item Write some R code that simulates capture histories from a
   spatial capture-recapture model under the following conditions:
@@ -124,18 +171,117 @@ sqrt(diag(vcov.link))
   For bonus points, write your R code as a function, allowing the user
   to set their own detector locations and parameter values.
 
+<<sim-fun, tidy = FALSE>>=
+## Arguments:
+##
+## pars: A vector of parameters (D, g0, sigma).
+## region.lims: A vector of survey region limits (x.lower, x.upper, y.lower, y.upper).
+## traps: Detector locations as a matrix of coordinates.
+sim.simplescr <- function(pars, region.lims, traps){
+    ## Extracting parameter values.
+    D <- pars[1]
+    g0 <- pars[2]
+    sigma <- pars[3]
+    ## Calculating area of survey region in hectares.
+    region.area <- (region.lims[2] - region.lims[1])*
+        (region.lims[4] - region.lims[3])/10000
+    ## Extracting number of detectors.
+    n.traps <- nrow(traps)
+    ## Simulating number of animals.
+    n.acs <- rpois(1, D*region.area)
+    ## Simulating activity centre locations.
+    ac.locs.x <- runif(n.acs, region.lims[1], region.lims[2])
+    ac.locs.y <- runif(n.acs, region.lims[3], region.lims[4])
+    ac.locs <- cbind(ac.locs.x, ac.locs.y)
+    ## Calculating a matrix of differences between activity centres and detectors.
+    dists <- crossdist(ac.locs[, 1], ac.locs[, 2],
+                       traps[, 1], traps[, 2])
+    ## Calculating detection probabilities.
+    det.probs <- g0*exp(-dists^2/(2*sigma^2))
+    ## Creating capture histories.
+    capt.full <- matrix(rbinom(n.acs*n.traps, 1, det.probs),
+                        nrow = n.acs, ncol = n.traps)
+    ## We only observe capture histories with at least one detection.
+    capt <- capt.full[apply(capt.full, 1, sum) > 0, ]
+    capt
+}
+set.seed(1234)
+capt.sim <- sim.simplescr(c(0.75, 0.9, 75), c(-500, 900, -500, 900),
+                          test.data$traps)
+capt.sim
+@  
+
 \item Fit a spatial capture-recapture model to your simulated
   data. Note that you can use the detector locations in
   \texttt{test.data\$traps} and the mask in
   \texttt{test.data\$mask}. How close are your estimates to the true
   parameter values?
 
+<<fit-sim, cache = TRUE, tidy = FALSE>>=
+fit.sim <- optim(par.start, scr.nll, capt = capt.sim, traps = test.data$traps, 
+                 mask = test.data$mask)
+## For D:
+exp(fit.sim$par[1])
+## For g0:
+plogis(fit.sim$par[2])
+## For sigma:
+exp(fit.sim$par[3])
+@ 
+
+\answer{All three are surprisingly close. In fact, closer than I'd
+  expect---I think this is partly luck!}
+  
 \item For STATS 730 graduates only: Compute confidence intervals for
   the three parameters. Did they capture the true parameter values?
+  
+<<sim-unlink-ci>>=
+hess.sim <- optimHess(fit.sim$par, scr.nll, capt = capt.sim, 
+                      traps = test.data$traps, mask = test.data$mask)
+vcov.link.sim <- solve(hess.sim)
+ses.link.sim <- sqrt(diag(vcov.link.sim))
+## For D:
+exp(fit.sim$par[1] + c(-1, 1)*qnorm(0.975)*ses.link.sim[1])
+## For g0:
+plogis(fit.sim$par[2] + c(-1, 1)*qnorm(0.975)*ses.link.sim[2])
+## For sigma:
+exp(fit.sim$par[3] + c(-1, 1)*qnorm(0.975)*ses.link.sim[3])
+@
+
+\answer{Yes, all three parameters fall within their respective
+  confidence intervals.}
 
 \item Run a simulation study, repeating Questions 5--7 a total of 100
   times. This involves simulating 100 sets of capture histories, and
   generating estimates from each. Inspect your 100 sets of estimates.
+
+<<simstudy, tidy = FALSE, eval = FALSE>>=
+set.seed(4321)
+n.sims <- 100
+par.ests <- matrix(0, nrow = n.sims, ncol = 3)
+D.cis <- matrix(0, nrow = n.sims, ncol = 2)
+g0.cis <- matrix(0, nrow = n.sims, ncol = 2)
+sigma.cis <- matrix(0, nrow = n.sims, ncol = 2)
+for (i in 1:n.sims){
+    cat(i, "\n")
+    capt.sim <- sim.simplescr(c(0.75, 0.9, 75), c(-500, 900, -500, 900),
+                              test.data$traps)
+    fit.sim <- optim(par.start, scr.nll, capt = capt.sim, traps = test.data$traps, 
+                     mask = test.data$mask)
+    par.ests[i, ] <- c(exp(fit.sim$par[1]), plogis(fit.sim$par[2]),
+                       exp(fit.sim$par[3]))
+    hess.sim <- optimHess(fit.sim$par, scr.nll, capt = capt.sim, 
+                          traps = test.data$traps, mask = test.data$mask)
+    vcov.link.sim <- solve(hess.sim)
+    ses.link.sim <- sqrt(diag(vcov.link.sim))
+    ## For D:
+    D.cis[i, ] <- exp(fit.sim$par[1] + c(-1, 1)*qnorm(0.975)*ses.link.sim[1])
+    ## For g0:
+    g0.cis[i, ] <- plogis(fit.sim$par[2] + c(-1, 1)*qnorm(0.975)*ses.link.sim[2])
+    ## For sigma:
+    sigma.cis[i, ] <- exp(fit.sim$par[3] + c(-1, 1)*qnorm(0.975)*ses.link.sim[3])
+}
+@   
+  
   \begin{enumerate}
   \item[(a)] How close are the averages of your parameter estimates to
     the true parameter values?
@@ -143,20 +289,66 @@ sqrt(diag(vcov.link))
     intervals capture the true parameter values?
   \end{enumerate}
 
+  \section*{Questions for \texttt{ascr} users}
+  
+\item Fit the same model from \texttt{secr-ll.r}, but using the
+  \texttt{ascr} package. Verify that you get the same parameter
+  estimates. For STATS 730 graduates, also verify that you get similar
+  standard errors and confidence intervals.
+  
+<<fit-ascr, message = FALSE, tidy = FALSE>>=
+library(ascr)
+## Fitting the model.
+fit.ascr <- fit.ascr(capt = list(bincapt = test.data$bin.capt),
+                     traps = test.data$traps, mask = test.data$mask)
+## Looking at the estimates and standard errors.
+summary(fit.ascr)
+## Comparison with our estimates and standard errors.
+cbind(c(exp(fit$par[1]), plogis(fit$par[2]), exp(fit$par[3])),
+      ses.unlink)
+## Looking at the confidence intervals.
+confint(fit.ascr)
+## Comparison with our confidence intervals.
+rbind(exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1]),
+      plogis(fit$par[2] + c(-1, 1)*qnorm(0.975)*ses.link[2]),
+      exp(fit$par[3] + c(-1, 1)*qnorm(0.975)*ses.link[3]))
+@ 
+
+\answer{Our estimates are the same, but \texttt{ascr} appears to
+  construct the confidence intervals directly on the untransformed
+  parameters, which isn't entirely sensible! (Oops, better fix this.)}
+  
   \section*{Questions for \texttt{secr} users}
 
 \item Fit the same model from \texttt{secr-ll.r}, but using the
   \texttt{secr} package. Verify that you get the same parameter
-  estimates. For STATS 730 graduates, also verify that you get the
-  same standard errors. This will require some data reformatting.
+  estimates. For STATS 730 graduates, also verify that you get similar
+  standard errors and confidence intervals. This will require some
+  data reformatting.
 
-  \section*{Questions for \texttt{ascr} users}
+<<fit-secr, message = FALSE, warning = FALSE, tidy = FALSE>>=
+library(secr)
+## Reformatting the data.
+capt.secr <- convert.capt.to.secr(list(bincapt = test.data$bin.capt),
+                                  traps = test.data$traps)
+mask.secr <- convert.mask(test.data$mask)
+traps.secr <- convert.traps(test.data$traps)
+## Fitting the model.
+fit.secr <- secr.fit(capthist = capt.secr, mask = mask.secr, trace = FALSE)
+## Looking at the estimates, standard errors, and confidence intervals.
+predict(fit.secr)
+## Comparison with our estimates and standard errors.
+cbind(c(exp(fit$par[1]), plogis(fit$par[2]), exp(fit$par[3])),
+      ses.unlink)
+## Comparison with our confidence intervals.
+rbind(exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1]),
+      plogis(fit$par[2] + c(-1, 1)*qnorm(0.975)*ses.link[2]),
+      exp(fit$par[3] + c(-1, 1)*qnorm(0.975)*ses.link[3]))
+@ 
 
-\item Fit the same model from \texttt{secr-ll.r}, but using the
-  \texttt{ascr} package. Verify that you get the same parameter
-  estimates. For STATS 730 graduates, also verify that you get the
-  same standard errors.
-  
+\answer{The standard errors are a little different, but the estimates
+  and confidence intervals are very similar.}
+
 \end{enumerate}
 
 \bibliographystyle{tcite}
