@@ -45,13 +45,15 @@ library(spatstat)
 @ 
   
 <<setup, echo = FALSE, message = FALSE, cache = TRUE>>=
+setwd("..")
 source("scr-ll.r")
+setwd("exercises")
 @ 
   
 \section*{General questions}
   
-\item Create a plot of the detector locations. Their coodinates can be
-  found in \texttt{test.data\$traps}.
+\item Create a plot of the detector locations. Their coordinates can
+  be found in \texttt{test.data\$traps}.
   
 <<plot-detectors, fig.width = 3, out.width = "3in", fig.height = 3, out.height = "3in", tidy = FALSE>>=
 par(mar = c(4, 4, 0, 0), oma = rep(1, 4))
@@ -280,14 +282,15 @@ for (i in 1:n.sims){
     ## For sigma:
     sigma.cis[i, ] <- exp(fit.sim$par[3] + c(-1, 1)*qnorm(0.975)*ses.link.sim[3])
 }
+save(par.ests, D.cis, g0.cis, sigma.cis, file = "sim-res.RData")
 @   
-  
-  \begin{enumerate}
-  \item[(a)] How close are the averages of your parameter estimates to
-    the true parameter values?
-  \item[(b)] For STATS 730 graduates only: How often do your confidence
-    intervals capture the true parameter values?
-  \end{enumerate}
+
+\begin{enumerate}
+\item[(a)] How close are the averages of your parameter estimates to
+  the true parameter values?
+\item[(b)] For STATS 730 graduates only: How often do your confidence
+  intervals capture the true parameter values?
+\end{enumerate}
 
 <<simstudy-res, echo = -1>>=
 load("sim-res.RData")
@@ -295,20 +298,26 @@ load("sim-res.RData")
 ## iteration did not converge properly and gave me a silly answer, so I
 ## discarded it.
 apply(par.ests[-1, ], 2, mean)
+## CI coverage for each parameter.
+mean(D.cis[-1, 1] <= 0.75 & D.cis[-1, 2] >= 0.75)
+mean(g0.cis[-1, 1] <= 0.9 & g0.cis[-1, 2] >= 0.9)
+mean(sigma.cis[-1, 1] <= 75 & sigma.cis[-1, 2] >= 75)
 @ 
 
 \answer{The averages for all three parameters are close to the true
-  parameter values. Our estimators appear more-or-less unbiased. We'd
-  probably get a better indication with a larger number of
+  parameter values. Our estimators appear more-or-less unbiased. With
+  only 100 interations, it's hard to determine whether or not CI
+  coverage reaches the nominal 95\%, but all three are more or less
+  there. We'd get a better indication with a larger number of
   iterations.}
 
-  \section*{Questions for \texttt{ascr} users}
+\section*{Questions for \texttt{ascr} users}
   
 \item Fit the same model from \texttt{secr-ll.r}, but using the
   \texttt{ascr} package. Verify that you get the same parameter
   estimates. For STATS 730 graduates, also verify that you get similar
   standard errors and confidence intervals.
-  
+
 <<fit-ascr, message = FALSE, tidy = FALSE>>=
 library(ascr)
 ## Fitting the model.
@@ -336,7 +345,7 @@ rbind(exp(fit$par[1] + c(-1, 1)*qnorm(0.975)*ses.link[1]),
   untransformed parameters. I should probably change the default
   behaviour.}
   
-  \section*{Questions for \texttt{secr} users}
+\section*{Questions for \texttt{secr} users}
 
 \item Fit the same model from \texttt{secr-ll.r}, but using the
   \texttt{secr} package. Verify that you get the same parameter
