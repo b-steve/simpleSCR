@@ -66,7 +66,7 @@ scr.nll <- function(pars, capt, traps, mask){
     ## calculated by the log of the sum of the individual likelihood
     ## contributions.
     log.f.capt <- sum(log(f.capt + .Machine$double.xmin))
-    ## Calculating the effective survey area (not used in likelihood here).
+    ## Calculating the effective sampling area.
     esa <- a*sum(p.det)
     ## Log-likelihood contribution from the number of animals
     ## detected.
