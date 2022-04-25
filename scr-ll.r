@@ -46,6 +46,8 @@ scr.nll <- function(pars, capt, traps, mask){
     ## point being detected by *at least one* trap.
     p.avoid <- apply(1 - mask.probs, 1, prod)
     p.det <- 1 - p.avoid
+    ## Calculating the effective sampling area.
+    esa <- a*sum(p.det)
     ##Calculating likelihood contribution due to each
     ## detected animal's capture history.
     f.capt <- numeric(n)
@@ -56,18 +58,13 @@ scr.nll <- function(pars, capt, traps, mask){
         for (j in 1:n.mask){
             log.f.capt.given.s[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE))
         }
-        ## Summing the probabilities over all mask points. The
-        ## denominator is the probability of detection by at least one
-        ## detector. It is required because it is impossible to
-        ## observe an all-zero capture history.
-        f.capt[i] <- sum(exp(log.f.capt.given.s))/sum(p.det)
+        ## Summing the integrand over all mask points.
+        f.capt[i] <- sum(exp(log.f.capt.given.s))/esa
     }
     ## Log-likelihood contribution from all capture histories
     ## calculated by the log of the sum of the individual likelihood
     ## contributions.
     log.f.capt <- sum(log(f.capt + .Machine$double.xmin))
-    ## Calculating the effective sampling area.
-    esa <- a*sum(p.det)
     ## Log-likelihood contribution from the number of animals
     ## detected.
     log.f.n <- dpois(n, D*esa, log = TRUE)
@@ -94,3 +91,5 @@ exp(fit$par[1])
 plogis(fit$par[2])
 ## sigma:
 exp(fit$par[3])
+
+fit$value
