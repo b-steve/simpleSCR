@@ -52,14 +52,36 @@ scr.nll <- function(pars, capt, traps, mask){
     ## detected animal's capture history.
     f.capt <- numeric(n)
     for (i in 1:n){
-        ## Calculating the log-probability of the animal's capture
-        ## history, conditional on being at the jth mask point.
-        log.f.capt.given.s <- numeric(n.mask)
+        ## Calculating the log of the integrand for each animal.
+        log.integrand <- numeric(n.mask)
         for (j in 1:n.mask){
-            log.f.capt.given.s[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE))
+            ## We need to compute f(capt | s)*f(s) here, where f(capt
+            ## | s) is the probability of observing the capture
+            ## history given the animal's location is at s, and f(s)
+            ## is the PDF of a randomly selected detected individual's
+            ## location.
+            if (FALSE){
+                ## The long way to calculate this is as follows. For
+                ## f(capt | s), we need to divide by p.det because we
+                ## can't observe capture histories that are all
+                ## zeroes. Note that we are adding machine precision to
+                ## prevent log(0).
+                log.f.capt.given.s <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE)) -
+                    log(p.det[j] + .Machine$double.xmin)
+                ## Then f(s) is pdot(s)/esa as follows.
+                log.f.s <- log(p.det[j] + .Machine$double.xmin) - log(esa)
+                ## Then sum the logs.
+                log.integrand[j] <- log.f.capt.given.s + log.f.s
+            } else {
+                ## But we can save a little time and avoid numerical
+                ## instability by cancelling the p.det[j] on the
+                ## denominator of f(capt | s) with the d.det[j] on the
+                ## numberator of f(s).
+                log.integrand[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE)) - log(esa)
+            }
+            ## Summing the integrand over all mask points.
+            f.capt[i] <- sum(exp(log.integrand))
         }
-        ## Summing the integrand over all mask points.
-        f.capt[i] <- sum(exp(log.f.capt.given.s))/esa
     }
     ## Log-likelihood contribution from all capture histories
     ## calculated by the log of the sum of the individual likelihood
@@ -80,6 +102,8 @@ load("test-data.RData")
 
 ## Some start values: D = 0.1, g0 = 0.5, sigma = 50.
 par.start <- c(log(0.1), qlogis(0.5), log(50))
+
+scr.nll(par.start, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
 
 ## Fitting the model.
 fit <- optim(par.start, scr.nll, capt = test.data$bin.capt, traps = test.data$traps, mask = test.data$mask)
