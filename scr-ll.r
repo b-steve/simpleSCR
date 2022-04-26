@@ -79,9 +79,9 @@ scr.nll <- function(pars, capt, traps, mask){
                 ## numberator of f(s).
                 log.integrand[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE)) - log(esa)
             }
-            ## Summing the integrand over all mask points.
-            f.capt[i] <- sum(exp(log.integrand))
         }
+        ## Summing the integrand over all mask points.
+        f.capt[i] <- sum(exp(log.integrand))
     }
     ## Log-likelihood contribution from all capture histories
     ## calculated by the log of the sum of the individual likelihood
