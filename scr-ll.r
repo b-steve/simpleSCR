@@ -76,7 +76,7 @@ scr.nll <- function(pars, capt, traps, mask){
                 ## But we can save a little time and avoid numerical
                 ## instability by cancelling the p.det[j] on the
                 ## denominator of f(capt | s) with the d.det[j] on the
-                ## numberator of f(s).
+                ## numerator of f(s).
                 log.integrand[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE)) - log(esa)
             }
         }
