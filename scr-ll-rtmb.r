@@ -49,18 +49,6 @@ a <- attr(test.data$mask, "area")
 par.start <- c(log(0.1), qlogis(0.5), log(50))
 ## Evaluating the log-likelhood at the start values.
 scr.nll(par.start)
-## Fitting the model without RTMB.
-fit.o <- optim(par.start, scr.nll)
-
-## Unlinking estimates.
-## D:
-exp(fit.o$par[1])
-## g0:
-plogis(fit.o$par[2])
-## sigma:
-exp(fit.o$par[3])
-## Negative log-likelihood at the estimates.
-fit.o$value
 
 ## Now trying it with RTMB.
 obj <- MakeADFun(scr.nll, parameters = par.start)
