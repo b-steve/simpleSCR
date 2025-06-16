@@ -229,9 +229,9 @@ fit.scr.tape.obo <- function(capt, traps, mask, par.start, optimize.tape = TRUE)
     c(D = exp(fit$par[1]), g0 =  plogis(fit$par[2]), sigma = exp(fit$par[3]))
 }
 
-########################################################################
+##############################################
 ## Beginning of regular TMB implementation. ##
-########################################################################
+##############################################
 
 fit.scr.tmb <- function(capt, traps, mask, par.start){
     ## Number of capture histories.
