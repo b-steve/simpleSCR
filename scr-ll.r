@@ -6,21 +6,24 @@ library(spatstat)
 ##
 ## Arguments are as follows:
 ##
-## pars: A vector of parameters at which to compute the
-##       log-likelihood. They should appear in the following order:
-##       (1) log(D), (2) logit(g0), (3) log(sigma). Note that density,
-##       D, is animals per hectare.
+## pars:       A vector of parameters at which to compute the
+##             log-likelihood. They should appear in the following
+##             order: (1) log(D), (2) logit(g0), (3) log(sigma). Note
+##             that density, D, is animals per hectare.
 ##
-## capt: Matrix of capture histories.
+## capt:       Matrix of capture histories.
 ## 
-## traps: Matrix containing x- and y-coordinates of trap locations.
+## traps:      Matrix containing x- and y-coordinates of trap locations.
 ##
-## mask: Matrix containing x- and y-coordinates of mask point
-##       locations. Needs to have attribute 'area', providing the area
-##       of a single pixel.
+## mask:       Matrix containing x- and y-coordinates of mask point
+##             locations. Needs to have attribute 'area', providing the area
+##             of a single pixel.
+##
+## capt.probs: If TRUE, then capture history probabilities are
+##             returned, instead of a negative log-likelihood.
 ##
 ## Note that trap and mask coordinates are given in metres.
-scr.nll <- function(pars, capt, traps, mask){
+scr.nll <- function(pars, capt, traps, mask, capt.probs = FALSE){
     ## Unlinking parameters
     D <- exp(pars[1])
     g0 <- plogis(pars[2])
@@ -75,13 +78,13 @@ scr.nll <- function(pars, capt, traps, mask){
             } else {
                 ## But we can save a little time and avoid numerical
                 ## instability by cancelling the p.det[j] on the
-                ## denominator of f(capt | s) with the d.det[j] on the
-                ## numerator of f(s).
+                ## denominator of f(capt | s) with the p.det[j] on the
+                ## numberator of f(s).
                 log.integrand[j] <- sum(dbinom(capt[i, ], 1, mask.probs[j, ], log = TRUE)) - log(esa)
             }
         }
         ## Summing the integrand over all mask points.
-        f.capt[i] <- sum(exp(log.integrand))
+        f.capt[i] <- sum(exp(log.integrand)*a)
     }
     ## Log-likelihood contribution from all capture histories
     ## calculated by the log of the sum of the individual likelihood
@@ -93,8 +96,14 @@ scr.nll <- function(pars, capt, traps, mask){
     ## Overall log-likelihood. The last part accounts for the fact
     ## that we cannot observe an all-zero capture history.
     ll <- log.f.n + log.f.capt
-    ## Returning negative log-likelihood.
-    -ll
+    ## Returning negative log-likelihood, or individual capture
+    ## history probabilities, depending on capt.prob.
+    if (capt.probs){
+        out <- f.capt
+    } else {
+        out <- -ll
+    }
+    out
 }
 
 ## Loading some data to test things out.
@@ -115,5 +124,6 @@ exp(fit$par[1])
 plogis(fit$par[2])
 ## sigma:
 exp(fit$par[3])
-
+## Negative log-likelihood at the estimates.
 fit$value
+
