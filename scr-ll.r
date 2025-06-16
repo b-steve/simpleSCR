@@ -37,7 +37,11 @@ scr.nll <- function(pars, capt, traps, mask, capt.probs = FALSE){
     ## Area of a single mask pixel.
     a <- attr(mask, "area")
     ## Constructing a distance matrix. The element (i, j) gives the
-    ## distance between the ith mask point and the jth trap.
+    ## distance between the ith mask point and the jth trap. A better
+    ## implementation would involve computing these distances once,
+    ## outside this function, and then passing them in as an argument,
+    ## to avoid recomputing the distances multiple times during model
+    ## fitting.
     mask.dists <- crossdist(mask[, 1], mask [, 2],
                             traps[, 1], traps[, 2])
     ## Constructing a detection probability matrix. The element (i, j)
