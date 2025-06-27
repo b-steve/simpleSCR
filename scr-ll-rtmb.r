@@ -30,14 +30,11 @@ scr.nll <- function(pars, capt, dists, a){
     ## A vector to save likelihood contributions.
     f.capt <- numeric(n)
     ## Looping over capture histories.
-    out <- 0
-    for (i in 1:n){
-        out <- out + log(sum(exp(apply(det.probs, 1, function(x) sum(dbinom(capt[i, ], 1, x, log = TRUE))))*a) + .Machine$double.xmin)
-    }
+    mask.integrand <- exp((log(det.probs) %*% t(capt)) + (log(1-det.probs) %*% t(1-capt)) + log(D) - log(esa*D))
+    log.lik.contr <- log(colSums(mask.integrand))
     ## Contribution from the number of capture hisories, after some cancellation.
-    out <- out + n*log(D) - D*esa - log(factorial(n))
-    ##f.n <- dpois(n, D*esa, log = TRUE)
-    -out
+    ll <- sum(log.lik.contr) + (n*log(esa*D) - (esa*D) - log(factorial(n)))
+    -ll
 }
 ## A closure so that we can specify data explicitly.
 scr.nll.closure <- function(capt, dists, a){
@@ -302,8 +299,10 @@ system.time({fit.scr.tmb(capt, traps, mask, par.start)})
 system.time({fit.scr.rtmb(rbind(capt, capt, capt), traps, mask, par.start)})
 system.time({fit.scr.tmb(rbind(capt, capt, capt), traps, mask, par.start)})
 
+par.start.big <- par.start
+par.start.big[1] <- log(exp(par.start[1])*10)
 ## Same with ten copies of the data (140 capture histories).
 system.time({fit.scr.rtmb(rbind(capt, capt, capt, capt, capt, capt, capt, capt, capt, capt),
-                          traps, mask, par.start)})
+                          traps, mask, par.start.big)})
 system.time({fit.scr.tmb(rbind(capt, capt, capt, capt, capt, capt, capt, capt, capt, capt),
-                         traps, mask, par.start)})
+                         traps, mask, par.start.big)})
